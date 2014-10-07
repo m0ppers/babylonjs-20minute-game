@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<style type="text/css">
+html, body {
+	margin: 0;
+	height: 100%;
+	width: 100%;
+}
+
+#babylon {
+	height: 100%;
+	width: 100%;
+}
+</style>
+<script type="text/javascript" src="babylon.1.14-beta-debug.js"></script>
+<script type="text/javascript" src="Oimo.js"></script>
+</head>
+<body>
+<canvas id="babylon"></canvas>
+<script type="text/javascript">
+var start = new Date();
+var canvas = document.getElementById("babylon");
+var engine = new BABYLON.Engine(canvas);
+var scene = new BABYLON.Scene(engine);
+scene.enablePhysics(null, new BABYLON.OimoJSPlugin());
+
+var light = new BABYLON.PointLight("point", new BABYLON.Vector3.Zero(), scene);
+light.position.x = 5;
+light.position.y = 5;
+light.position.z = 5;
+var ground = BABYLON.Mesh.CreateGround("ground", 10, 10, 10, scene);
+ground.setPhysicsState(BABYLON.PhysicsEngine.PlaneImpostor, {"mass": 0, "friction": 0.2, "restitution": 0.3});
+ground.checkCollisions = true;
+var sphere = BABYLON.Mesh.CreateSphere("sphere", 10, 1, scene);
+sphere.position.y = 2;
+sphere.checkCollisions = true;
+sphere.setPhysicsState(BABYLON.PhysicsEngine.SphereImpostor, {"mass": 1, "friction": 0.2, "restitution": 0.3});
+
+scene.onPointerDown = function(evt, result) {
+	if (result.hit) {
+		if (result.pickedMesh === ground) {
+			var dropBall = new BABYLON.Mesh.CreateSphere(null, 10, 0.2, scene);
+			dropBall.position.y = 10;
+			dropBall.position.x = result.pickedPoint.x;
+			dropBall.position.z = result.pickedPoint.z;
+			dropBall.setPhysicsState(BABYLON.PhysicsEngine.SphereImpostor, {"mass": 10, "friction": 0.2, "restitution": 0.3});
+		}
+	}
+}
+
+// This creates and positions a free camera
+var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+camera.setTarget(new BABYLON.Vector3.Zero());
+camera.attachControl(canvas, false);
+camera.checkCollisions = true;
+
+var isDone = false;
+engine.runRenderLoop(function() {
+	if (!isDone && sphere.position.y <= 0) {
+		alert("Done in " + ((new Date()).getTime() - start.getTime()) / 1000 + "seconds. Reload to try again!");
+		isDone = true;
+	}
+	scene.render();
+});
+</script>
+</body>
+</html>
